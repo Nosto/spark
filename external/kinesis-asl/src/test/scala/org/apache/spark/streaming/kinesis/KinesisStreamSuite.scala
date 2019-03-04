@@ -47,8 +47,9 @@ abstract class KinesisStreamTests(aggregateTestData: Boolean) extends KinesisFun
   private val batchDuration = Seconds(1)
 
   // Dummy parameters for API testing
-  private val dummyEndpointUrl = defaultEndpointUrl
-  private val dummyRegionName = KinesisTestUtils.getRegionNameByEndpoint(dummyEndpointUrl)
+  private val dummyKinesisEndpointUrl = defaultKinesisEndpointUrl
+  private val dummyDynamoEndpointUrl = defaultDynamoEndpointUrl
+  private val dummyRegionName = KinesisTestUtils.getRegionNameByEndpoint(dummyKinesisEndpointUrl)
   private val dummyAWSAccessKey = "dummyAccessKey"
   private val dummyAWSSecretKey = "dummySecretKey"
 
@@ -99,12 +100,14 @@ abstract class KinesisStreamTests(aggregateTestData: Boolean) extends KinesisFun
       streamingContext(ssc).
       checkpointAppName(appName).
       streamName("dummyStream").
-      endpointUrl(dummyEndpointUrl).
+      endpointUrl(dummyKinesisEndpointUrl).
+      dynamoEndpointUrl(dummyDynamoEndpointUrl).
       regionName(dummyRegionName).initialPosition(new Latest()).
       checkpointInterval(Seconds(2)).
       storageLevel(StorageLevel.MEMORY_AND_DISK_2).
       kinesisCredentials(BasicCredentials(dummyAWSAccessKey, dummyAWSSecretKey)).
       build()
+
     assert(inputStream.isInstanceOf[KinesisInputDStream[Array[Byte]]])
 
     val kinesisStream = inputStream.asInstanceOf[KinesisInputDStream[Array[Byte]]]
@@ -129,7 +132,7 @@ abstract class KinesisStreamTests(aggregateTestData: Boolean) extends KinesisFun
     nonEmptyRDD shouldBe a [KinesisBackedBlockRDD[_]]
     val kinesisRDD = nonEmptyRDD.asInstanceOf[KinesisBackedBlockRDD[_]]
     assert(kinesisRDD.regionName === dummyRegionName)
-    assert(kinesisRDD.endpointUrl === dummyEndpointUrl)
+    assert(kinesisRDD.endpointUrl === defaultKinesisEndpointUrl)
     assert(kinesisRDD.kinesisReadConfigs.retryTimeoutMs === batchDuration.milliseconds)
     assert(kinesisRDD.kinesisCreds === BasicCredentials(
       awsAccessKeyId = dummyAWSAccessKey,
@@ -238,7 +241,8 @@ abstract class KinesisStreamTests(aggregateTestData: Boolean) extends KinesisFun
       val kinesisStream = KinesisInputDStream.builder.streamingContext(ssc)
       .checkpointAppName(appName)
       .streamName("dummyStream")
-      .endpointUrl(dummyEndpointUrl)
+      .endpointUrl(dummyKinesisEndpointUrl)
+      .dynamoEndpointUrl(dummyDynamoEndpointUrl)
       .regionName(dummyRegionName)
       .initialPosition(new Latest())
       .checkpointInterval(Seconds(10))

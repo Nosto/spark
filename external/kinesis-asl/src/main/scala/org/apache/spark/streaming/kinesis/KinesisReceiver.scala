@@ -84,7 +84,8 @@ import org.apache.spark.util.Utils
  */
 private[kinesis] class KinesisReceiver[T](
     val streamName: String,
-    endpointUrl: String,
+    kinesisEndpointUrl: String,
+    dynamoEndpointUrl: String,
     regionName: String,
     initialPosition: KinesisInitialPosition,
     checkpointAppName: String,
@@ -162,8 +163,11 @@ private[kinesis] class KinesisReceiver[T](
         dynamoDBCreds.map(_.provider).getOrElse(kinesisProvider),
         cloudWatchCreds.map(_.provider).getOrElse(kinesisProvider),
         workerId)
-        .withKinesisEndpoint(endpointUrl)
+        .withKinesisEndpoint(kinesisEndpointUrl)
+        .withDynamoDBEndpoint(dynamoEndpointUrl)
+        .withInitialPositionInStream(initialPosition.getPosition)
         .withTaskBackoffTimeMillis(500)
+        .withMetricsLevel("NONE")
         .withRegionName(regionName)
         .withMetricsLevel(metricsLevel)
         .withMetricsEnabledDimensions(metricsEnabledDimensions.asJava)
