@@ -48,7 +48,8 @@ private[kinesis] class KinesisInputDStream[T: ClassTag](
     val dynamoDBCreds: Option[SparkAWSCredentials],
     val cloudWatchCreds: Option[SparkAWSCredentials],
     val metricsLevel: MetricsLevel,
-    val metricsEnabledDimensions: Set[String]
+    val metricsEnabledDimensions: Set[String],
+    val metricsFactoryClassName: Option[String]
   ) extends ReceiverInputDStream[T](_ssc) {
 
   import KinesisReadConfigurations._
@@ -85,7 +86,7 @@ private[kinesis] class KinesisInputDStream[T: ClassTag](
     new KinesisReceiver(streamName, kinesisEndpointUrl, dynamoEndpointUrl, regionName, initialPosition,
       checkpointAppName, checkpointInterval, _storageLevel, messageHandler,
       kinesisCreds, dynamoDBCreds, cloudWatchCreds,
-      metricsLevel, metricsEnabledDimensions)
+      metricsLevel, metricsEnabledDimensions, metricsFactoryClassName)
   }
 }
 
@@ -113,6 +114,7 @@ object KinesisInputDStream {
     private var cloudWatchCredsProvider: Option[SparkAWSCredentials] = None
     private var metricsLevel: Option[MetricsLevel] = None
     private var metricsEnabledDimensions: Option[Set[String]] = None
+    private var maybeMetricsFactoryClassName: Option[String] = None
 
     /**
      * Sets the StreamingContext that will be used to construct the Kinesis DStream. This is a
@@ -289,6 +291,11 @@ object KinesisInputDStream {
       this
     }
 
+    def metricsFactoryClassName(className: String): Builder = {
+      maybeMetricsFactoryClassName = Option(className)
+      this
+    }
+
     /**
      * Sets the CloudWatch metrics level. Defaults to
      * [[KinesisClientLibConfiguration.DEFAULT_METRICS_LEVEL]] if no custom value is specified.
@@ -344,7 +351,8 @@ object KinesisInputDStream {
         dynamoDBCredsProvider,
         cloudWatchCredsProvider,
         metricsLevel.getOrElse(DEFAULT_METRICS_LEVEL),
-        metricsEnabledDimensions.getOrElse(DEFAULT_METRICS_ENABLED_DIMENSIONS))
+        metricsEnabledDimensions.getOrElse(DEFAULT_METRICS_ENABLED_DIMENSIONS),
+        maybeMetricsFactoryClassName)
     }
 
     /**
