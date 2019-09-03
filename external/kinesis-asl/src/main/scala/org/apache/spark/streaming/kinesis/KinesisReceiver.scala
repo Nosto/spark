@@ -97,7 +97,8 @@ private[kinesis] class KinesisReceiver[T](
     cloudWatchCreds: Option[SparkAWSCredentials],
     metricsLevel: MetricsLevel,
     metricsEnabledDimensions: Set[String],
-    metricsFactoryClassName: Option[String])
+    metricsFactoryClassName: Option[String],
+    maybeMaxRecords: Option[Int])
   extends Receiver[T](storageLevel) with Logging { receiver =>
 
   /*
@@ -172,6 +173,8 @@ private[kinesis] class KinesisReceiver[T](
         .withRegionName(regionName)
         .withMetricsLevel(metricsLevel)
         .withMetricsEnabledDimensions(metricsEnabledDimensions.asJava)
+
+      maybeMaxRecords.foreach(maxRecords => baseClientLibConfiguration.withMaxRecords(maxRecords))
 
       // Update the Kinesis client lib config with timestamp
       // if InitialPositionInStream.AT_TIMESTAMP is passed
