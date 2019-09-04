@@ -50,7 +50,8 @@ private[kinesis] class KinesisInputDStream[T: ClassTag](
     val metricsLevel: MetricsLevel,
     val metricsEnabledDimensions: Set[String],
     val metricsFactoryClassName: Option[String],
-    val maybeMaxRecords: Option[Int]
+    val maybeMaxRecords: Option[Int],
+    val maybeTaskBackoffTimeMillis: Option[Long]
   ) extends ReceiverInputDStream[T](_ssc) {
 
   import KinesisReadConfigurations._
@@ -87,7 +88,7 @@ private[kinesis] class KinesisInputDStream[T: ClassTag](
     new KinesisReceiver(streamName, kinesisEndpointUrl, dynamoEndpointUrl, regionName, initialPosition,
       checkpointAppName, checkpointInterval, _storageLevel, messageHandler,
       kinesisCreds, dynamoDBCreds, cloudWatchCreds,
-      metricsLevel, metricsEnabledDimensions, metricsFactoryClassName, maybeMaxRecords)
+      metricsLevel, metricsEnabledDimensions, metricsFactoryClassName, maybeMaxRecords, maybeTaskBackoffTimeMillis)
   }
 }
 
@@ -117,6 +118,7 @@ object KinesisInputDStream {
     private var metricsEnabledDimensions: Option[Set[String]] = None
     private var maybeMetricsFactoryClassName: Option[String] = None
     private var maybeMaxRecords: Option[Int] = None
+    private var maybeTaskBackoffTimeMillis: Option[Long] = None
 
     /**
      * Sets the StreamingContext that will be used to construct the Kinesis DStream. This is a
@@ -303,6 +305,11 @@ object KinesisInputDStream {
       this
     }
 
+    def taskBackoffTimeMillis(t: Long): Builder = {
+      maybeTaskBackoffTimeMillis = Some(t)
+      this
+    }
+
     /**
      * Sets the CloudWatch metrics level. Defaults to
      * [[KinesisClientLibConfiguration.DEFAULT_METRICS_LEVEL]] if no custom value is specified.
@@ -360,7 +367,8 @@ object KinesisInputDStream {
         metricsLevel.getOrElse(DEFAULT_METRICS_LEVEL),
         metricsEnabledDimensions.getOrElse(DEFAULT_METRICS_ENABLED_DIMENSIONS),
         maybeMetricsFactoryClassName,
-        maybeMaxRecords)
+        maybeMaxRecords,
+        maybeTaskBackoffTimeMillis)
     }
 
     /**

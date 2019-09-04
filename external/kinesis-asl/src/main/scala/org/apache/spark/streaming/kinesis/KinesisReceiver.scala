@@ -98,7 +98,8 @@ private[kinesis] class KinesisReceiver[T](
     metricsLevel: MetricsLevel,
     metricsEnabledDimensions: Set[String],
     metricsFactoryClassName: Option[String],
-    maybeMaxRecords: Option[Int])
+    maybeMaxRecords: Option[Int],
+    maybeTaskBackoffTimeMillis: Option[Long])
   extends Receiver[T](storageLevel) with Logging { receiver =>
 
   /*
@@ -168,7 +169,7 @@ private[kinesis] class KinesisReceiver[T](
         .withKinesisEndpoint(kinesisEndpointUrl)
         .withDynamoDBEndpoint(dynamoEndpointUrl)
         .withInitialPositionInStream(initialPosition.getPosition)
-        .withTaskBackoffTimeMillis(500)
+        .withTaskBackoffTimeMillis(maybeTaskBackoffTimeMillis.getOrElse(500))
         .withMetricsLevel("NONE")
         .withRegionName(regionName)
         .withMetricsLevel(metricsLevel)
