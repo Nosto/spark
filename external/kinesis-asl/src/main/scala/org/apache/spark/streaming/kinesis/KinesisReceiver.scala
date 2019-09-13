@@ -99,7 +99,8 @@ private[kinesis] class KinesisReceiver[T](
     metricsEnabledDimensions: Set[String],
     metricsFactoryClassName: Option[String],
     maybeMaxRecords: Option[Int],
-    maybeTaskBackoffTimeMillis: Option[Long])
+    maybeTaskBackoffTimeMillis: Option[Long],
+    maybeLagMillis: Option[Long])
   extends Receiver[T](storageLevel) with Logging { receiver =>
 
   /*
@@ -195,7 +196,7 @@ private[kinesis] class KinesisReceiver[T](
     */
     val recordProcessorFactory = new IRecordProcessorFactory {
       override def createProcessor: IRecordProcessor =
-        new KinesisRecordProcessor(receiver, workerId)
+        new KinesisRecordProcessor(receiver, workerId, maybeLagMillis)
     }
 
     worker = metricsFactoryClassName.fold {
